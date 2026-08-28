@@ -1,0 +1,64 @@
+﻿"use client";
+
+import React, { useState } from "react";
+import DrinkCard from "../components/DrinkCard";
+import DrinkModal from "../components/DrinkModal";
+import { useCartStore } from "../../lib/cartStore";
+
+const sampleNames = [
+  'Classic Cold Brew','Vanilla Latte','Caramel Iced Coffee','Hazelnut Cold Brew','Mocha Chill','Cinnamon Latte','Iced Americano','Nitro Cold Brew','Coconut Latte','Matcha Frappe','Salted Caramel','Almond Chill','Vanilla Iced Tea','Honey Citrus','Espresso Tonic'
+];
+
+export default function PopularPage() {
+  const addItem = useCartStore(state => state.addItem);
+  const cartCount = useCartStore(state => state.items.reduce((s,i) => s + (i.qty || 0), 0));
+
+  const [selected, setSelected] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const drinks = sampleNames.map((name, i) => ({
+    id: `drink-${i+1}`,
+    name,
+    desc: 'A refreshing signature drink.',
+    calories: 50 + (i * 5) % 180,
+    price: (3 + (i % 5) * 0.5).toFixed(2),
+    img: '/fonts/images/social/Thumbnail.png'
+  }));
+
+  const handleOpen = (d) => { setSelected(d); setModalOpen(true); };
+
+  const handleAdd = (item) => {
+    addItem({ name: item.name, price: parseFloat(item.price) || 0, qty: item.qty || 1, meta: { id: item.id } });
+    setToast(`${item.name} added to cart`);
+    setTimeout(() => setToast(null), 1600);
+  };
+
+  return (
+    <main className="min-h-screen p-6 bg-background">
+      <div className="max-w-6xl mx-auto">
+        <header className="flex items-center gap-4 mb-6">
+          <img src="/fonts/images/social/Chilld_Cold_Brew_Core_Logo.svg" alt="logo" className="w-14 h-auto" />
+          <div>
+            <h1 className="text-foreground text-2xl font-bold">Popular Recipes</h1>
+            <div className="text-foreground/70 text-sm">15 standard drinks</div>
+          </div>
+
+          <div className="ml-auto text-foreground/80">Cart: {cartCount}</div>
+        </header>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {drinks.map(d => (
+            <DrinkCard key={d.id} drink={d} onAdd={handleAdd} onOpen={handleOpen} />
+          ))}
+        </section>
+
+        <DrinkModal drink={selected} open={modalOpen} onClose={() => setModalOpen(false)} onAdd={handleAdd} />
+
+        {toast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded">{toast}</div>
+        )}
+      </div>
+    </main>
+  );
+}

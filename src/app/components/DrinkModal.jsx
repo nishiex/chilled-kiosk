@@ -1,0 +1,39 @@
+﻿"use client";
+
+import React, { useState, useEffect } from "react";
+
+export default function DrinkModal({ drink, open, onClose, onAdd }) {
+  const [qty, setQty] = useState(1);
+
+  useEffect(() => {
+    if (open) setQty(1);
+  }, [open, drink]);
+
+  if (!open || !drink) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+
+      <div role="dialog" aria-modal="true" aria-label={drink.name} className="relative bg-card text-foreground rounded-2xl p-6 max-w-md w-full mx-4">
+        <button aria-label="Close" className="absolute top-3 right-3 text-foreground/80 text-xl" onClick={onClose}>×</button>
+
+        <img src={drink.img} alt={drink.name} className="w-full h-56 object-cover rounded-md mb-4" />
+
+        <h3 className="text-xl font-semibold">{drink.name}</h3>
+        <p className="text-foreground/70 mt-2">{drink.desc}</p>
+        <p className="text-foreground/60 mt-1 text-sm">{drink.calories} kcal</p>
+
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex items-center bg-popover rounded-md px-3 py-1">
+            <button aria-label="Decrease quantity" onClick={() => setQty(q => Math.max(1,q-1))} className="px-3">-</button>
+            <div className="px-4 text-foreground">{qty}</div>
+            <button aria-label="Increase quantity" onClick={() => setQty(q => q+1)} className="px-3">+</button>
+          </div>
+
+          <button onClick={() => { onAdd?.({ ...drink, qty }); onClose?.(); }} className="ml-auto bg-primary hover:brightness-110 text-primary-foreground px-4 py-2 rounded">Add to cart</button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,155 @@
+"use client";
+
+import React, { useRef, useEffect } from "react";
+import { gsap } from "gsap";
+
+export default function DiagonalLoopSVG({
+  duration = 8,
+  svgWidth = "30%",
+  pauseOnHover = false,
+  ariaLabel = null,
+}) {
+  const containerRef = useRef(null);
+  const sprites = useRef([null, null]);
+  const tlRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const el0 = sprites.current[0];
+    const el1 = sprites.current[1];
+
+    if (!container || !el0 || !el1) return;
+
+    const createTimeline = () => {
+      if (tlRef.current) tlRef.current.kill();
+
+      gsap.set([el0, el1], {
+        clearProps: "transform",
+      });
+
+      const cRect = container.getBoundingClientRect();
+      const sRect = el0.getBoundingClientRect();
+
+      const startX = cRect.width;
+      const startY = cRect.height;
+      const endX = -sRect.width;
+      const endY = -sRect.height;
+
+      gsap.set([el0, el1], {
+        x: startX,
+        y: startY,
+        willChange: "transform",
+      });
+
+      const tl = gsap.timeline({
+        repeat: -1,
+        defaults: {
+          ease: "linear",
+        },
+      });
+
+      tl.to(
+        el0,
+        {
+          x: endX,
+          y: endY,
+          duration,
+        },
+        0
+      );
+
+      tl.to(
+        el1,
+        {
+          x: endX,
+          y: endY,
+          duration,
+        },
+        duration / 2
+      );
+
+      tlRef.current = tl;
+    };
+
+    createTimeline();
+
+    const onResize = () => createTimeline();
+    window.addEventListener("resize", onResize);
+
+    const onEnter = () => {
+      if (pauseOnHover && tlRef.current) {
+        tlRef.current.pause();
+      }
+    };
+
+    const onLeave = () => {
+      if (pauseOnHover && tlRef.current) {
+        tlRef.current.resume();
+      }
+    };
+
+    container.addEventListener("mouseenter", onEnter);
+    container.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      container.removeEventListener("mouseenter", onEnter);
+      container.removeEventListener("mouseleave", onLeave);
+
+      if (tlRef.current) {
+        tlRef.current.kill();
+      }
+    };
+  }, [duration, pauseOnHover]);
+
+  const setRef = (el, i) => {
+    sprites.current[i] = el;
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "360px",
+        overflow: "hidden",
+      }}
+      aria-label={ariaLabel || undefined}
+    >
+      <img
+        ref={(el) => setRef(el, 0)}
+        src="/kiosk-art.svg"
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: svgWidth,
+          height: "auto",
+          display: "block",
+          pointerEvents: "none",
+        }}
+      />
+
+      <img
+        ref={(el) => setRef(el, 1)}
+        src="/kiosk-art.svg"
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: svgWidth,
+          height: "auto",
+          display: "block",
+          pointerEvents: "none",
+        }}
+      />
+    </div>
+  );
+}

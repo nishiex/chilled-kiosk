@@ -1,0 +1,283 @@
+﻿"use client";
+
+import React, { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+
+export default function DiagonalLoopSVG({ tileWidth = 1600, tileHeight = 1000, duration = 7 }) {
+  const artRef = useRef(null);
+
+  useEffect(() => {
+    const artwork = artRef.current;
+    if (!artwork) return;
+
+    const TILE_W = tileWidth;
+    const TILE_H = tileHeight;
+    const CYCLE_SECONDS = duration;
+
+    let scrollTween = null;
+    const proxy = { x: 0, y: 0 };
+
+    function startArtworkScroll() {
+      if (scrollTween) scrollTween.kill();
+
+      // reset proxy so the tween always runs from 0 -> -TILE
+      proxy.x = 0;
+      proxy.y = 0;
+
+      scrollTween = gsap.to(proxy, {
+        x: -TILE_W,
+        y: -TILE_H,
+        duration: CYCLE_SECONDS,
+        ease: "none",
+        repeat: -1,
+        onUpdate: () => {
+          if (artwork) artwork.style.backgroundPosition = `${proxy.x}px ${proxy.y}px`;
+        },
+      });
+    }
+
+    startArtworkScroll();
+
+    const onResize = () => {
+      // restart the scroll on resize to avoid interpolation artifacts
+      startArtworkScroll();
+    };
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      if (scrollTween) scrollTween.kill();
+      window.removeEventListener("resize", onResize);
+    };
+  }, [tileWidth, tileHeight, duration]);
+
+  const imgPath = "/fonts/images/kiosk-art.svg"; // existing public path in your repo
+
+  return (
+    <>
+      <main className="kiosk">
+        <div className="art-layer">
+          <div
+            ref={artRef}
+            className="art-sprite"
+            // set background-image inline so the path is resolved by Next's public folder
+            style={{ backgroundImage: `url(${imgPath})` }}
+          />
+        </div>
+
+        <div className="content">
+          <header className="brand">
+            <div className="brand-mark">CHILLED</div>
+            <div className="brand-subtitle">SELF ORDERING KIOSK</div>
+          </header>
+
+          <section className="hero">
+            <p className="eyebrow">Welcome</p>
+            <h1 className="title">Refreshingly Simple Ordering</h1>
+            <p className="intro">Build something refreshing, choose a favourite, or grab a bottle to take home.</p>
+          </section>
+
+          <div className="options" role="navigation" aria-label="Ordering options">
+            <button className="option-card" data-action="popular">
+              <span className="option-number">01</span>
+              <span>
+                <strong>Popular Recipes</strong>
+                <small>Choose from our favourites</small>
+              </span>
+              <span className="arrow">↴</span>
+            </button>
+
+            <button className="option-card" data-action="create">
+              <span className="option-number">02</span>
+              <span>
+                <strong>Create Your Own</strong>
+                <small>Make your signature drink</small>
+              </span>
+              <span className="arrow">↴</span>
+            </button>
+
+            <button className="option-card" data-action="previous">
+              <span className="option-number">03</span>
+              <span>
+                <strong>Previous Creations</strong>
+                <small>Order a saved favourite</small>
+              </span>
+              <span className="arrow">↴</span>
+            </button>
+
+            <button className="option-card" data-action="concentrate">
+              <span className="option-number">04</span>
+              <span>
+                <strong>Bottled Concentrate</strong>
+                <small>Take the experience home</small>
+              </span>
+              <span className="arrow">↴</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="toast" className="toast" role="status" aria-live="polite"></div>
+      </main>
+
+      <style jsx global>{`
+        * { box-sizing: border-box; }
+
+        :root {
+          --blue: #1844ab;
+          --white: #ffffff;
+          --soft-white: rgba(255, 255, 255, 0.78);
+          --line: rgba(255, 255, 255, 0.2);
+          --card: rgba(255, 255, 255, 0.1);
+        }
+
+        html, body {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          background: var(--blue);
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .kiosk {
+          position: relative;
+          width: 100vw;
+          height: 100vh;
+          min-height: 600px;
+          overflow: hidden;
+          isolation: isolate;
+          background: var(--blue);
+          color: var(--white);
+        }
+
+        .art-layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: -1;
+          background: var(--blue);
+        }
+
+        .art-sprite {
+          --tile-w: ${tileWidth}px;
+          --tile-h: ${tileHeight}px;
+          position: absolute;
+          top: calc(-1 * var(--tile-h));
+          left: calc(-1 * var(--tile-w));
+          width: calc(100% + 2 * var(--tile-w));
+          height: calc(100% + 2 * var(--tile-h));
+
+          background-repeat: repeat;
+          background-size: var(--tile-w) var(--tile-h);
+          background-position: 0px 0px;
+
+          will-change: transform;
+        }
+
+        .art-layer::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            90deg,
+            rgba(24, 68, 171, 0.94) 0%,
+            rgba(24, 68, 171, 0.72) 35%,
+            rgba(24, 68, 171, 0.18) 70%,
+            rgba(24, 68, 171, 0.55) 100%
+          );
+        }
+
+        .content {
+          position: relative;
+          width: min(1440px, 100%);
+          height: 100%;
+          margin: 0 auto;
+          padding: clamp(28px, 4vw, 64px) clamp(22px, 4vw, 64px);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .brand {
+          display: flex;
+          align-items: baseline;
+          gap: 12px;
+          letter-spacing: 0.08em;
+        }
+
+        .brand-mark {
+          font-size: clamp(18px, 1.5vw, 26px);
+          font-weight: 800;
+        }
+
+        .brand-subtitle {
+          font-size: 10px;
+          font-weight: 700;
+          opacity: 0.7;
+        }
+
+        .hero {
+          max-width: 720px;
+          margin-top: clamp(55px, 10vh, 130px);
+        }
+
+        .eyebrow {
+          margin: 0 0 14px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .title {
+          margin: 0;
+          font-size: clamp(28px, 5.4vw, 64px);
+          line-height: 0.95;
+        }
+
+        .intro {
+          margin-top: 18px;
+          max-width: 52ch;
+          color: var(--soft-white);
+        }
+
+        .options {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 18px;
+          margin-top: 40px;
+        }
+
+        .option-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 18px;
+          background: var(--card);
+          border-radius: 12px;
+          border: 1px solid var(--line);
+          color: var(--white);
+        }
+
+        .option-number {
+          font-weight: 800;
+          opacity: 0.9;
+          margin-right: 8px;
+        }
+
+        .arrow { margin-left: auto; opacity: 0.85; }
+
+        .toast {
+          position: fixed;
+          left: 50%;
+          transform: translateX(-50%);
+          bottom: 18px;
+          background: rgba(0,0,0,0.5);
+          color: #fff;
+          padding: 8px 12px;
+          border-radius: 8px;
+          display: none;
+        }
+      `}</style>
+    </>
+  );
+}
