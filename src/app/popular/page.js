@@ -1,63 +1,69 @@
-﻿"use client";
+﻿import ProductCard from "../components/ProductCard";
 
-import React, { useState } from "react";
-import DrinkCard from "../components/DrinkCard";
-import DrinkModal from "../components/DrinkModal";
-import { useCartStore } from "../../lib/cartStore";
+const items = [
+  {
+    id: "kaapi-concentrate",
+    title: "Kaapi Concentrate",
+    subtitle: "South Indian filter-inspired depth · 250ml",
+    imageSrc: "/testproduct.png",
+    unitPrice: 29,
+  },
+  {
+    id: "bold-concentrate",
+    title: "Bold Concentrate",
+    subtitle: "Balanced Arabica & Robusta · 250ml",
+    imageSrc: "/testproduct.png",
+    unitPrice: 34,
+  },
+  {
+    id: "classic-concentrate",
+    title: "Classic Concentrate",
+    subtitle: "100% Arabica from Coorg · 250ml",
+    imageSrc: "/testproduct.png",
+    unitPrice: 26,
+  },
+  {
+    id: "rajpresso",
+    title: "RajPresso",
+    subtitle: "Silky-smooth Espresso Martini · Cold Coffee · Sweet",
+    imageSrc: "/testproduct.png",
+    unitPrice: 32,
+  },
+  {
+    id: "vandy-mood-mocha",
+    title: "Vandy Mood Mocha",
+    subtitle: "Nitro Espresso Martini · Matcha · Bitter",
+    imageSrc: "/testproduct.png",
+    unitPrice: 30,
+  },
+  {
+    id: "kishorappe",
+    title: "Kishorappe",
+    subtitle: "Nitro Espresso Martini · Chilled · Lemon",
+    imageSrc: "/testproduct.png",
+    unitPrice: 28,
+  }
 
-const sampleNames = [
-  'Classic Cold Brew','Vanilla Latte','Caramel Iced Coffee','Hazelnut Cold Brew','Mocha Chill','Cinnamon Latte','Iced Americano','Nitro Cold Brew','Coconut Latte','Matcha Frappe','Salted Caramel','Almond Chill','Vanilla Iced Tea','Honey Citrus','Espresso Tonic'
 ];
 
-export default function PopularPage() {
-  const addItem = useCartStore(state => state.addItem);
-  const cartCount = useCartStore(state => state.items.reduce((s,i) => s + (i.qty || 0), 0));
-
-  const [selected, setSelected] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const drinks = sampleNames.map((name, i) => ({
-    id: `drink-${i+1}`,
-    name,
-    desc: 'A refreshing signature drink.',
-    calories: 50 + (i * 5) % 180,
-    price: (3 + (i % 5) * 0.5).toFixed(2),
-    img: '/fonts/images/social/Thumbnail.png'
-  }));
-
-  const handleOpen = (d) => { setSelected(d); setModalOpen(true); };
-
-  const handleAdd = (item) => {
-    addItem({ name: item.name, price: parseFloat(item.price) || 0, qty: item.qty || 1, meta: { id: item.id } });
-    setToast(`${item.name} added to cart`);
-    setTimeout(() => setToast(null), 1600);
-  };
-
+export default function Page() {
   return (
-    <main className="min-h-screen p-6 bg-background">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex items-center gap-4 mb-6">
-          <img src="/fonts/images/social/Chilld_Cold_Brew_Core_Logo.svg" alt="logo" className="w-14 h-auto" />
-          <div>
-            <h1 className="text-foreground text-2xl font-bold">Popular Recipes</h1>
-            <div className="text-foreground/70 text-sm">15 standard drinks</div>
-          </div>
+    <main className="min-h-screen py-12 bg-[#f4f2ea]">
+      <div className="max-w-7xl mx-auto px-6">
+        <h1 className="text-3xl font-extrabold mb-8 text-[#1F2A44]">Popular</h1>
 
-          <div className="ml-auto text-foreground/80">Cart: {cartCount}</div>
-        </header>
-
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {drinks.map(d => (
-            <DrinkCard key={d.id} drink={d} onAdd={handleAdd} onOpen={handleOpen} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map((item) => (
+            <ProductCard
+              key={item.id}
+              id={item.id}
+              title={item.title}
+              subtitle={item.subtitle}
+              imageSrc={item.imageSrc}
+              unitPrice={item.unitPrice}
+            />
           ))}
-        </section>
-
-        <DrinkModal drink={selected} open={modalOpen} onClose={() => setModalOpen(false)} onAdd={handleAdd} />
-
-        {toast && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded">{toast}</div>
-        )}
+        </div>
       </div>
     </main>
   );

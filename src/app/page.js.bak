@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import DiagonalLoopSVG from "./components/Dialgonalloopsvg";
 export default function Home() {
   return (

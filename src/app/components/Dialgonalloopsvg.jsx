@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
+import Image from "next/image";
+
 export default function KioskHome() {
   const artworkRef = useRef(null);
   const tweenRef = useRef(null);
@@ -92,8 +94,6 @@ export default function KioskHome() {
 
   return (
     <main className="relative h-screen min-h-[600px] w-screen overflow-hidden bg-[#1844ab] text-white">
-
-     
 
       <section
         className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden bg-[#1844ab]"
@@ -218,8 +218,8 @@ export default function KioskHome() {
               "
             >
 
-              <span className="self-start text-[11px] font-bold opacity-50">
-                {option.number}
+              <span className="self-start w-10 h-10 flex items-center justify-center">
+                <Image src={'/' + option.number + '.svg'} alt={option.title + ' icon'} width={32} height={32} unoptimized />
               </span>
 
               <span>
@@ -252,8 +252,10 @@ export default function KioskHome() {
             Tap an option to continue
           </span>
         </footer>
-
+    
       </section>
     </main>
   );
 }
+
+

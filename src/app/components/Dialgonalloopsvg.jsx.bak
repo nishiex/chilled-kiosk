@@ -1,155 +1,260 @@
-"use client";
+﻿"use client";
 
-import React, { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import Spline from '@splinetool/react-spline/next';
 
-export default function DiagonalLoopSVG({
-  duration = 8,
-  svgWidth = "30%",
-  pauseOnHover = false,
-  ariaLabel = null,
-}) {
-  const containerRef = useRef(null);
-  const sprites = useRef([null, null]);
-  const tlRef = useRef(null);
+export default function KioskHome() {
+  const artworkRef = useRef(null);
+  const tweenRef = useRef(null);
+  const resizeRef = useRef(null);
 
   useEffect(() => {
-    const container = containerRef.current;
-    const el0 = sprites.current[0];
-    const el1 = sprites.current[1];
+    const artwork = artworkRef.current;
 
-    if (!container || !el0 || !el1) return;
+    if (!artwork) return;
 
-    const createTimeline = () => {
-      if (tlRef.current) tlRef.current.kill();
+    const createArtworkLoop = () => {
+      if (tweenRef.current) {
+        tweenRef.current.kill();
+      }
 
-      gsap.set([el0, el1], {
-        clearProps: "transform",
+      gsap.set(artwork, {
+        xPercent: -50,
+        yPercent: -50,
+        scale: 1.1,
+        force3D: true,
+        transformOrigin: "center center",
       });
 
-      const cRect = container.getBoundingClientRect();
-      const sRect = el0.getBoundingClientRect();
-
-      const startX = cRect.width;
-      const startY = cRect.height;
-      const endX = -sRect.width;
-      const endY = -sRect.height;
-
-      gsap.set([el0, el1], {
-        x: startX,
-        y: startY,
-        willChange: "transform",
-      });
-
-      const tl = gsap.timeline({
+      tweenRef.current = gsap.to(artwork, {
+        xPercent: -54,
+        yPercent: -54,
+        scale: 1.13,
+        duration: 1,
+        ease: "sine.inOut",
         repeat: -1,
-        defaults: {
-          ease: "linear",
-        },
+        yoyo: true,
       });
-
-      tl.to(
-        el0,
-        {
-          x: endX,
-          y: endY,
-          duration,
-        },
-        0
-      );
-
-      tl.to(
-        el1,
-        {
-          x: endX,
-          y: endY,
-          duration,
-        },
-        duration / 2
-      );
-
-      tlRef.current = tl;
     };
 
-    createTimeline();
+    createArtworkLoop();
 
-    const onResize = () => createTimeline();
-    window.addEventListener("resize", onResize);
+    const handleResize = () => {
+      clearTimeout(resizeRef.current);
 
-    const onEnter = () => {
-      if (pauseOnHover && tlRef.current) {
-        tlRef.current.pause();
-      }
+      resizeRef.current = setTimeout(() => {
+        createArtworkLoop();
+      }, 180);
     };
 
-    const onLeave = () => {
-      if (pauseOnHover && tlRef.current) {
-        tlRef.current.resume();
-      }
-    };
-
-    container.addEventListener("mouseenter", onEnter);
-    container.addEventListener("mouseleave", onLeave);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      container.removeEventListener("mouseenter", onEnter);
-      container.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeRef.current);
 
-      if (tlRef.current) {
-        tlRef.current.kill();
+      if (tweenRef.current) {
+        tweenRef.current.kill();
       }
     };
-  }, [duration, pauseOnHover]);
+  }, []);
 
-  const setRef = (el, i) => {
-    sprites.current[i] = el;
+  const handleOption = (action) => {
+    console.log(`Selected: ${action}`);
   };
 
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "360px",
-        overflow: "hidden",
-      }}
-      aria-label={ariaLabel || undefined}
-    >
-      <img
-        ref={(el) => setRef(el, 0)}
-        src="/kiosk-art.svg"
-        alt=""
-        aria-hidden="true"
-        draggable="false"
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: svgWidth,
-          height: "auto",
-          display: "block",
-          pointerEvents: "none",
-        }}
-      />
+  const options = [
+    {
+      number: "01",
+      title: "Popular Recipes",
+      description: "Choose from our favourites",
+      action: "popular",
+    },
+    {
+      number: "02",
+      title: "Create Your Own",
+      description: "Make your signature drink",
+      action: "create",
+    },
+    {
+      number: "03",
+      title: "Previous Creations",
+      description: "Order a saved favourite",
+      action: "previous",
+    },
+    {
+      number: "04",
+      title: "Bottled Concentrate",
+      description: "Take the experience home",
+      action: "concentrate",
+    },
+  ];
 
-      <img
-        ref={(el) => setRef(el, 1)}
-        src="/kiosk-art.svg"
-        alt=""
+  return (
+    <main className="relative h-screen min-h-[600px] w-screen overflow-hidden bg-[#1844ab] text-white">
+
+     
+
+      <section
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden bg-[#1844ab]"
         aria-hidden="true"
-        draggable="false"
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: svgWidth,
-          height: "auto",
-          display: "block",
-          pointerEvents: "none",
-        }}
-      />
-    </div>
+      >
+        <img
+          ref={artworkRef}
+          src="/kiosk-art.svg"
+          alt=""
+          draggable={false}
+          className="
+            absolute
+            left-1/2
+            top-[100%]
+            block
+            h-[180%]
+            w-[120%]
+            max-w-none
+            -translate-x-1/2
+            -translate-y-1/2
+            select-none
+            object-cover
+            object-center
+            will-change-transform
+          "
+        />
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-[linear-gradient(90deg,rgba(24,68,171,.94)_0%,rgba(24,68,171,.72)_35%,rgba(24,68,171,.18)_70%,rgba(24,68,171,.55)_100%)]
+          "
+        />
+      </section>
+
+      {/* =========================
+          CONTENT
+      ========================== */}
+
+      <section className="relative z-10 mx-auto flex h-full w-full max-w-[1440px] flex-col px-[clamp(22px,4vw,64px)] py-[clamp(28px,4vw,64px)]">
+
+        {/* BRAND */}
+
+        <div className="flex items-baseline gap-3 tracking-[0.08em]">
+          <span className="text-[clamp(18px,1.5vw,26px)] font-extrabold">
+            CHILLED
+          </span>
+
+          <span className="text-[10px] font-bold opacity-70">
+            SELF ORDERING
+          </span>
+        </div>
+
+        {/* HERO */}
+
+        <div className="mt-[clamp(55px,10vh,130px)] max-w-[720px]">
+
+          <p className="mb-[14px] text-xs font-bold tracking-[0.2em] opacity-70">
+            WELCOME
+          </p>
+
+          <h1 className="m-0 text-[clamp(48px,6.5vw,104px)] font-extrabold leading-[0.94] tracking-[-0.055em]">
+            What would you
+            <br />
+            <span className="opacity-70">
+              like today?
+            </span>
+          </h1>
+
+          <p className="mt-[26px] max-w-[500px] text-[clamp(15px,1.25vw,19px)] leading-[1.5] text-white/80">
+            Build something refreshing, choose a favourite, or grab a bottle
+            to take home.
+          </p>
+
+        </div>
+
+        {/* OPTIONS */}
+
+        <div
+          className="
+            mt-auto
+            grid
+            w-full
+            max-w-[760px]
+            grid-cols-1
+            gap-3
+            md:grid-cols-2
+          "
+          role="navigation"
+          aria-label="Ordering options"
+        >
+
+          {options.map((option) => (
+            <button
+              key={option.action}
+              type="button"
+              onClick={() => handleOption(option.action)}
+              className="
+                group
+                grid
+                min-h-[88px]
+                grid-cols-[42px_1fr_28px]
+                items-center
+                rounded-[20px]
+                border
+                border-white/20
+                bg-white/10
+                px-[22px]
+                py-5
+                text-left
+                text-white
+                backdrop-blur-lg
+                transition-all
+                duration-200
+                ease-out
+                hover:-translate-y-1
+                hover:border-white/40
+                hover:bg-white/[0.16]
+                active:scale-[0.985]
+                md:min-h-[116px]
+              "
+            >
+
+              <span className="self-start text-[11px] font-bold opacity-50">
+                {option.number}
+              </span>
+
+              <span>
+                <strong className="mb-1 block text-[clamp(17px,1.5vw,23px)]">
+                  {option.title}
+                </strong>
+
+                <small className="text-xs text-white/65">
+                  {option.description}
+                </small>
+              </span>
+
+              <span className="justify-self-end text-[22px] opacity-70 transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5">
+                ↗
+              </span>
+
+            </button>
+          ))}
+
+        </div>
+
+        {/* FOOTER */}
+
+        <footer className="flex justify-between gap-5 pt-[22px] text-[11px] tracking-[0.04em] text-white/50">
+          <span>
+            Touch anywhere to begin
+          </span>
+
+          <span className="hidden sm:block">
+            Tap an option to continue
+          </span>
+        </footer>
+    
+      </section>
+    </main>
   );
 }

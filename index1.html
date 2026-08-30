@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Chilled — Self Ordering Kiosk</title>
+
+    <!-- =========================
+       CSS
+  ========================== -->
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --blue: #1844ab;
+        --white: #ffffff;
+        --soft-white: rgba(255, 255, 255, 0.78);
+        --line: rgba(255, 255, 255, 0.2);
+        --card: rgba(255, 255, 255, 0.1);
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--blue);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      /* =========================
+       KIOSK
+    ========================== */
+
+      .kiosk {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        min-height: 600px;
+        overflow: hidden;
+        isolation: isolate;
+        background: var(--blue);
+        color: var(--white);
+      }
+
+      /* =========================
+       SVG BACKGROUND
+    ========================== */
+
+      .art-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: -1;
+        background: var(--blue);
+      }
+
+      .art-sprite {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+
+        width: 120%;
+        height: 120%;
+
+        max-width: none;
+        display: block;
+
+        object-fit: cover;
+        object-position: center;
+
+        transform: translate3d(-50%, -50%, 0);
+        transform-origin: center center;
+
+        user-select: none;
+        pointer-events: none;
+        -webkit-user-drag: none;
+
+        will-change: transform;
+      }
+
+      .art-layer::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(24, 68, 171, 0.94) 0%,
+          rgba(24, 68, 171, 0.72) 35%,
+          rgba(24, 68, 171, 0.18) 70%,
+          rgba(24, 68, 171, 0.55) 100%
+        );
+      }
+
+      /* =========================
+       CONTENT
+    ========================== */
+
+      .content {
+        position: relative;
+
+        width: min(1440px, 100%);
+        height: 100%;
+
+        margin: 0 auto;
+
+        padding: clamp(28px, 4vw, 64px) clamp(22px, 4vw, 64px);
+
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* =========================
+       BRAND
+    ========================== */
+
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+
+        letter-spacing: 0.08em;
+      }
+
+      .brand-mark {
+        font-size: clamp(18px, 1.5vw, 26px);
+        font-weight: 800;
+      }
+
+      .brand-subtitle {
+        font-size: 10px;
+        font-weight: 700;
+
+        opacity: 0.7;
+      }
+
+      /* =========================
+       HERO
+    ========================== */
+
+      .hero {
+        max-width: 720px;
+
+        margin-top: clamp(55px, 10vh, 130px);
+      }
+
+      .eyebrow {
+        margin: 0 0 14px;
+
+        font-size: 12px;
+        font-weight: 700;
+
+        letter-spacing: 0.2em;
+
+        opacity: 0.7;
+      }
+
+      h1 {
+        margin: 0;
+
+        font-size: clamp(48px, 6.5vw, 104px);
+
+        line-height: 0.94;
+
+        letter-spacing: -0.055em;
+
+        font-weight: 800;
+      }
+
+      h1 span {
+        opacity: 0.68;
+      }
+
+      .intro {
+        max-width: 500px;
+
+        margin: 26px 0 0;
+
+        color: var(--soft-white);
+
+        font-size: clamp(15px, 1.25vw, 19px);
+
+        line-height: 1.5;
+      }
+
+      /* =========================
+       OPTIONS
+    ========================== */
+
+      .options {
+        width: min(760px, 100%);
+
+        margin-top: auto;
+
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 12px;
+      }
+
+      .option-card {
+        min-height: 116px;
+
+        border: 1px solid var(--line);
+
+        border-radius: 20px;
+
+        background: var(--card);
+
+        color: var(--white);
+
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+
+        padding: 20px 22px;
+
+        display: grid;
+
+        grid-template-columns:
+          42px
+          1fr
+          28px;
+
+        align-items: center;
+
+        text-align: left;
+
+        cursor: pointer;
+
+        transition:
+          transform 220ms ease,
+          background 220ms ease,
+          border-color 220ms ease;
+
+        touch-action: manipulation;
+      }
+
+      .option-card:hover,
+      .option-card:focus-visible {
+        transform: translateY(-4px);
+
+        background: rgba(255, 255, 255, 0.16);
+
+        border-color: rgba(255, 255, 255, 0.42);
+
+        outline: none;
+      }
+
+      .option-card:active {
+        transform: scale(0.985);
+      }
+
+      .option-number {
+        align-self: start;
+
+        font-size: 11px;
+
+        font-weight: 700;
+
+        opacity: 0.55;
+      }
+
+      .option-card strong {
+        display: block;
+
+        margin-bottom: 6px;
+
+        font-size: clamp(17px, 1.5vw, 23px);
+      }
+
+      .option-card small {
+        color: rgba(255, 255, 255, 0.65);
+
+        font-size: 12px;
+      }
+
+      .arrow {
+        justify-self: end;
+
+        font-size: 22px;
+
+        opacity: 0.7;
+      }
+
+      /* =========================
+       FOOTER
+    ========================== */
+
+      footer {
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        padding-top: 22px;
+
+        color: rgba(255, 255, 255, 0.48);
+
+        font-size: 11px;
+
+        letter-spacing: 0.04em;
+      }
+
+      /* =========================
+       TOAST
+    ========================== */
+
+      .toast {
+        position: fixed;
+
+        left: 50%;
+        bottom: 32px;
+
+        transform: translate(-50%, 30px);
+
+        padding: 13px 18px;
+
+        border: 1px solid rgba(255, 255, 255, 0.22);
+
+        border-radius: 999px;
+
+        background: rgba(0, 0, 0, 0.24);
+
+        backdrop-filter: blur(10px);
+
+        opacity: 0;
+
+        pointer-events: none;
+
+        z-index: 10;
+
+        font-size: 13px;
+
+        transition:
+          opacity 220ms ease,
+          transform 220ms ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+
+        transform: translate(-50%, 0);
+      }
+
+      /* =========================
+       TABLET / MOBILE
+    ========================== */
+
+      @media (max-width: 800px) {
+        .kiosk {
+          min-height: 100vh;
+        }
+
+        .content {
+          padding: 28px 22px 22px;
+        }
+
+        .hero {
+          margin-top: 48px;
+        }
+
+        .options {
+          grid-template-columns: 1fr;
+
+          gap: 9px;
+        }
+
+        .option-card {
+          min-height: 88px;
+
+          border-radius: 16px;
+        }
+
+        footer span:last-child {
+          display: none;
+        }
+
+        .art-sprite {
+          width: 145%;
+          height: 145%;
+        }
+      }
+
+      /* =========================
+       SMALL HEIGHT
+    ========================== */
+
+      @media (max-height: 760px) and (min-width: 801px) {
+        .hero {
+          margin-top: 45px;
+        }
+
+        h1 {
+          font-size: clamp(44px, 5vw, 76px);
+        }
+
+        .option-card {
+          min-height: 92px;
+        }
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <!-- =========================
+       KIOSK
+  ========================== -->
+
+    <main class="kiosk">
+      <!-- =========================
+         SINGLE SVG ARTWORK
+    ========================== -->
+
+      <section class="art-layer" aria-hidden="true">
+        <img src="kiosk-art.svg" class="art-sprite" alt="" draggable="false" />
+      </section>
+
+      <!-- =========================
+         UI CONTENT
+    ========================== -->
+
+      <section class="content">
+        <!-- BRAND -->
+
+        <div class="brand">
+          <span class="brand-mark"> CHILLED </span>
+
+          <span class="brand-subtitle"> SELF ORDERING </span>
+        </div>
+
+        <!-- HERO -->
+
+        <div class="hero">
+          <p class="eyebrow">WELCOME</p>
+
+          <h1>
+            What would you<br />
+            <span>like today?</span>
+          </h1>
+
+          <p class="intro">
+            Build something refreshing, choose a favourite, or grab a bottle to
+            take home.
+          </p>
+        </div>
+
+        <!-- OPTIONS -->
+
+        <div class="options" role="navigation" aria-label="Ordering options">
+          <button class="option-card" data-action="popular">
+            <span class="option-number"> 01 </span>
+
+            <span>
+              <strong> Popular Recipes </strong>
+
+              <small> Choose from our favourites </small>
+            </span>
+
+            <span class="arrow"> ↗ </span>
+          </button>
+
+          <button class="option-card" data-action="create">
+            <span class="option-number"> 02 </span>
+
+            <span>
+              <strong> Create Your Own </strong>
+
+              <small> Make your signature drink </small>
+            </span>
+
+            <span class="arrow"> ↗ </span>
+          </button>
+
+          <button class="option-card" data-action="previous">
+            <span class="option-number"> 03 </span>
+
+            <span>
+              <strong> Previous Creations </strong>
+
+              <small> Order a saved favourite </small>
+            </span>
+
+            <span class="arrow"> ↗ </span>
+          </button>
+
+          <button class="option-card" data-action="concentrate">
+            <span class="option-number"> 04 </span>
+
+            <span>
+              <strong> Bottled Concentrate </strong>
+
+              <small> Take the experience home </small>
+            </span>
+
+            <span class="arrow"> ↗ </span>
+          </button>
+        </div>
+
+        <!-- FOOTER -->
+
+        <footer>
+          <span> Touch anywhere to begin </span>
+
+          <span> Tap an option to continue </span>
+        </footer>
+      </section>
+
+      <!-- TOAST -->
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <!-- =========================
+       GSAP CDN
+  ========================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+
+    <!-- =========================
+       JAVASCRIPT
+  ========================== -->
+
+    <script>
+      const artwork = document.querySelector(".art-sprite");
+
+      let artworkTween = null;
+      let resizeTimer = null;
+
+      /*
+       * SINGLE-SVG MOTION
+       *
+       * The supplied artwork is not a tileable texture, so a one-way
+       * repeat would always require a visible reset somewhere.
+       *
+       * Instead we use one oversized SVG and a very slow, smooth
+       * diagonal pendulum. The motion reverses through an eased curve,
+       * so there is no hard jump/reset and no duplicated artwork.
+       */
+      function createArtworkLoop() {
+        if (!artwork) return;
+
+        if (artworkTween) {
+          artworkTween.kill();
+        }
+
+        gsap.set(artwork, {
+          xPercent: -50,
+          yPercent: -50,
+          scale: 1.10,
+          force3D: true,
+          transformOrigin: "center center",
+        });
+
+        artworkTween = gsap.to(artwork, {
+          xPercent: -54,
+          yPercent: -54,
+          scale: 1.13,
+          duration: 1,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
+      }
+
+      function animateInterface() {
+        gsap.from(".brand", {
+          y: -20,
+          opacity: 0,
+          duration: 0.7,
+          ease: "power2.out",
+        });
+
+        gsap.from(".hero > *", {
+          y: 28,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.08,
+          delay: 0.15,
+          ease: "power3.out",
+        });
+
+        gsap.from(".option-card", {
+          y: 30,
+          opacity: 0,
+          duration: 0.7,
+          stagger: 0.09,
+          delay: 0.35,
+          ease: "power3.out",
+        });
+      }
+
+      window.addEventListener("load", () => {
+        createArtworkLoop();
+        animateInterface();
+      });
+
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+
+        resizeTimer = setTimeout(() => {
+          createArtworkLoop();
+        }, 180);
+      });
+    </script>
+  </body>
+</html>
